@@ -6,25 +6,31 @@ import (
 	"fmt"
 )
 
-// Store provides all functions to execute db queries and transaction
+// This one created for mock api testing
 
-type Store struct {
+type Store interface {
+	Querier
+	TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error)
+}
+
+// SQlStore provides all functions to execute db queries and transaction
+type SQLStore struct {
 	//Embedding the queries to perform the query operation in different model and this is called composition
-	*Queries
 	db *sql.DB
+	*Queries
 }
 
 // Fn to create an store object
 
-func NewStore(db *sql.DB) *Store {
-	return &Store{
+func NewStore(db *sql.DB) Store {
+	return &SQLStore{
 		db:      db,
 		Queries: New(db), // This New fn was created by sqlc
 	}
 }
 
 // It take a context and a callback function as input, Then it will start a new db transaction and create new transcation with queries object.
-func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
+func (store *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) error {
 	// This function will commit or rollback based on the error return by call back function
 
 	// tx,err :=  store.db.BeginTx(ctx, &sql.TxOptions{}) // This option allow us to set a custom isolation level for this transaction if we don't set it explicitly  then the default isolation level of the database  server will be used
@@ -73,7 +79,7 @@ type TransferTxResult struct {
 /* TransferTx  perform money transfer from one account to another account.
 it create a transfer record, add account entries and update account's balance within a single database transaction*/
 
-func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error) {
+func (store *SQLStore) TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error) {
 	var result TransferTxResult
 	// var err error
 

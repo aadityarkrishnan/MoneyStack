@@ -135,3 +135,150 @@ ORDER BY a.query_start;
 
 In order to deploy the application we use github actions
 for that create .github/workflows/ci.yaml in the root folder 
+
+
+To work with Rest API, Need to use Go Web Framework.
+For that we will use Gin Frameworks
+
+install using  `go get -u github.com/gin-gonic/gin`
+
+
+Next we need to use Golang viper to setup the configuration such as DB connection based on the environment which would help in reusing them without redundancy.
+
+install using `go get github.com/spf13/viper`
+
+
+Now we need to mock db for testing various scenarios
+
+go install github.com/golang/mock/mockgen@v1.6.0
+go get github.com/golang/mock/mockgen/model
+
+Then need to its path
+
+ ls -l  ~/go/bin                                 
+total 140464
+-rwxr-xr-x@ 1 aadityaradhakrishnan  staff  16677122 Mar 13 09:28 dlv
+-rwxr-xr-x@ 1 aadityaradhakrishnan  staff   3516722 Mar 13 09:27 go-outline
+-rwxr-xr-x@ 1 aadityaradhakrishnan  staff  29442530 Mar 13 09:29 gopls
+-rwxr-xr-x  1 aadityaradhakrishnan  staff   9528098 May  2 08:49 mockgen
+-rwxr-xr-x@ 1 aadityaradhakrishnan  staff  12738770 Mar 13 09:29 staticcheck
+
+
+which mockgen // if you are getting error that means, path is not added.
+
+echo $SHELL // to identity which shell you're using
+
+if your shell is /bin/zsh
+
+then edit vi ~/.zprofile
+
+and ADD export PATH=$PATH:~/go/bin
+
+source ~/.zprofile
+
+then again check which mockgen
+
+
+To create the mock file
+
+
+mockgen -package <package_name> -destination <destination path> <module> <Interface> 
+
+mockgen -package mockdb -destination db/mock/store.go github/aadityarkrishnan/MoneyStack/db/sqlc Store
+
+This will store.go in mock folder.
+
+
+To create a new migration use this
+migrate create -ext sql -dir db/migration -seq add_users
+/Users/aadityaradhakrishnan/Coding/MoneyStack/db/migration/000002_add_users.up.sql
+/Users/aadityaradhakrishnan/Coding/MoneyStack/db/migration/000002_add_users.down.sql
+
+
+then add the new migration into the new file for both up/down
+
+THen perform the migrate down to clean up existing data to avoid anamolies
+
+the add the migrate up and down for last one in the Make file.
+
+Now add the sql query for user table.
+
+Then run make sqlc , and write the test for user 
+
+then run make mock
+
+
+For JWT implementation, need to install,
+
+go get github.com/google/uuid
+
+go get github.com/dgrijalva/jwt-go
+
+For PASETO add
+go get github.com/o1egl/paseto
+
+After implementing the user authentication
+
+Now need to deploy the application using docker & kub8
+
+For the first need to create DockerFile in the root
+
+Then in that docker file specfiy where base(go lang), working dir , copy the file from local to docker , take build using RUN command and finally the exec command
+
+After this 
+docker build -t moneystack:latest .
+
+We divide the build stage and run build to reduce the size of docker image
+
+Need to rebuild once made changes in DockerFile
+
+ docker build -t moneystack:latest .
+
+ To rebuild without cache
+ docker build --no-cache -t moneystack:latest .
+
+
+ TO create the docker container use this
+ docker run --name moneystack -p 8080:8080 -e GIN_MODE=release  moneystack:latest
+
+ We need to add DB details 
+
+ docker inspect postgres12 | grep '"IPAddress"' | head -n 1 | awk -F '"' '{print $4}' // to get postgres IP address
+
+172.17.0.1 is the bridge address  of postgres | 172.17.0.2 is IP address
+ docker run --name moneystack -p 8080:8080 -e GIN_MODE=release -e  DBSOURCE="postgresql://root:root@172.17.0.2:5200/moneystack?sslmode=disable" moneystack:latest
+
+
+ aadityaradhakrishnan@Aadityas-MacBook-Air MoneyStack % docker network ls
+NETWORK ID     NAME              DRIVER    SCOPE
+19e585af8b4e   bridge            bridge    local
+0e2ce7b76cb7   docker_gwbridge   bridge    local
+8d3f0541a150   host              host      local
+d2b791bcb5bc   none              null      local
+aadityaradhakrishnan@Aadityas-MacBook-Air MoneyStack % 
+
+to get further details on network
+
+docker network inspect <network name>
+
+In order to create  network
+
+docker network create <network_name>
+
+In order to connect network with container
+
+docker network connect <network_name> <container>
+
+Now to create the moneystack  container with network
+
+
+docker run --name moneystack --network moneystack_nw -p 8080:8080 \
+  -e GIN_MODE=release \
+  -e DBSOURCE="postgresql://root:root@postgres12:5432/moneystack?sslmode=disable" \
+  moneystack:latest
+
+
+
+To enter into the container
+
+docker exec -it e9a614a1def8 /bin/sh

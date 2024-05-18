@@ -1,57 +1,82 @@
-CREATE TABLE "Categories" (
-  "id" bigserial PRIMARY KEY,
-  "category" varchar NOT NULL,
-  "status" boolean DEFAULT true
+CREATE TABLE "users" (
+  "username" varchar PRIMARY KEY,
+  "role" varchar NOT NULL DEFAULT 'depositor',
+  "hashed_password" varchar NOT NULL,
+  "full_name" varchar NOT NULL,
+  "email" varchar UNIQUE NOT NULL,
+  "is_email_verified" bool NOT NULL DEFAULT false,
+  "password_changed_at" timestamptz NOT NULL DEFAULT '0001-01-01',
+  "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
-CREATE TABLE "Expenses" (
+CREATE TABLE "verify_emails" (
   "id" bigserial PRIMARY KEY,
-  "cat_id" int NOT NULL,
-  "amount" bigint NOT NULL,
-  "from_ac" int NOT NULL,
-  "to_ac" int NOT NULL,
-  "status" boolean DEFAULT true,
-  "created_at" timestamptz DEFAULT (now())
+  "username" varchar NOT NULL,
+  "email" varchar NOT NULL,
+  "secret_code" varchar NOT NULL,
+  "is_used" bool NOT NULL DEFAULT false,
+  "created_at" timestamptz NOT NULL DEFAULT (now()),
+  "expired_at" timestamptz NOT NULL DEFAULT (now() + interval '15 minutes')
 );
 
-CREATE TABLE "Account" (
+CREATE TABLE "accounts" (
   "id" bigserial PRIMARY KEY,
   "owner" varchar NOT NULL,
-  "owe" bigint NOT NULL,
   "balance" bigint NOT NULL,
-  "status" boolean DEFAULT true
+  "currency" varchar NOT NULL,
+  "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
-CREATE TABLE "Transfers" (
+CREATE TABLE "entries" (
   "id" bigserial PRIMARY KEY,
-  "from_account_id" int NOT NULL,
-  "to_account_id" int NOT NULL,
+  "account_id" bigint NOT NULL,
   "amount" bigint NOT NULL,
-  "created_at" timestamptz DEFAULT (now())
+  "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
-CREATE INDEX ON "Categories" ("category");
+CREATE TABLE "transfers" (
+  "id" bigserial PRIMARY KEY,
+  "from_account_id" bigint NOT NULL,
+  "to_account_id" bigint NOT NULL,
+  "amount" bigint NOT NULL,
+  "created_at" timestamptz NOT NULL DEFAULT (now())
+);
 
-CREATE INDEX ON "Expenses" ("from_ac");
+CREATE TABLE "sessions" (
+  "id" uuid PRIMARY KEY,
+  "username" varchar NOT NULL,
+  "refresh_token" varchar NOT NULL,
+  "user_agent" varchar NOT NULL,
+  "client_ip" varchar NOT NULL,
+  "is_blocked" boolean NOT NULL DEFAULT false,
+  "expires_at" timestamptz NOT NULL,
+  "created_at" timestamptz NOT NULL DEFAULT (now())
+);
 
-CREATE INDEX ON "Expenses" ("to_ac");
+CREATE INDEX ON "accounts" ("owner");
 
-CREATE INDEX ON "Account" ("owner");
+CREATE UNIQUE INDEX ON "accounts" ("owner", "currency");
 
-CREATE INDEX ON "Transfers" ("from_account_id");
+CREATE INDEX ON "entries" ("account_id");
 
-CREATE INDEX ON "Transfers" ("to_account_id");
+CREATE INDEX ON "transfers" ("from_account_id");
 
-COMMENT ON COLUMN "Account"."owe" IS 'It can be negative or postive';
+CREATE INDEX ON "transfers" ("to_account_id");
 
-COMMENT ON COLUMN "Transfers"."amount" IS 'It must be +ve';
+CREATE INDEX ON "transfers" ("from_account_id", "to_account_id");
 
-ALTER TABLE "Expenses" ADD FOREIGN KEY ("cat_id") REFERENCES "Categories" ("id");
+COMMENT ON COLUMN "entries"."amount" IS 'can be negative or positive';
 
-ALTER TABLE "Expenses" ADD FOREIGN KEY ("from_ac") REFERENCES "Account" ("id");
+COMMENT ON COLUMN "transfers"."amount" IS 'must be positive';
 
-ALTER TABLE "Expenses" ADD FOREIGN KEY ("to_ac") REFERENCES "Account" ("id");
+ALTER TABLE "verify_emails" ADD FOREIGN KEY ("username") REFERENCES "users" ("username");
 
-ALTER TABLE "Transfers" ADD FOREIGN KEY ("from_account_id") REFERENCES "Account" ("id");
+ALTER TABLE "accounts" ADD FOREIGN KEY ("owner") REFERENCES "users" ("username");
 
-ALTER TABLE "Transfers" ADD FOREIGN KEY ("to_account_id") REFERENCES "Account" ("id");
+ALTER TABLE "entries" ADD FOREIGN KEY ("account_id") REFERENCES "accounts" ("id");
+
+ALTER TABLE "transfers" ADD FOREIGN KEY ("from_account_id") REFERENCES "accounts" ("id");
+
+ALTER TABLE "transfers" ADD FOREIGN KEY ("to_account_id") REFERENCES "accounts" ("id");
+
+ALTER TABLE "sessions" ADD FOREIGN KEY ("username") REFERENCES "users" ("username");

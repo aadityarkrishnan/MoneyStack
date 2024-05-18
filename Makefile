@@ -11,10 +11,22 @@ migrateup:
 migratedown:
 	migrate -path db/migration -database "postgresql://root:root@localhost:5200/moneystack?sslmode=disable" -verbose down
 
+migrateup_one:
+	migrate -path db/migration -database "postgresql://root:root@localhost:5200/moneystack?sslmode=disable" -verbose up 1
+
+migratedown_one:
+	migrate -path db/migration -database "postgresql://root:root@localhost:5200/moneystack?sslmode=disable" -verbose down 1
+
 sqlc:
 	sqlc generate
 
 test:
 	go test -v -cover ./...
 
-.PHONY:postgres  createdb dropdb migrateup migratedown sqlc test
+server:
+	go run main.go
+
+mock:
+	mockgen -package mockdb -destination db/mock/store.go github/aadityarkrishnan/MoneyStack/db/sqlc Store
+
+.PHONY:postgres  createdb dropdb migrateup migratedown migrateup_one migratedown_one  sqlc test server mock
