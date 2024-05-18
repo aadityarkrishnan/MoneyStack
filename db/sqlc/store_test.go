@@ -11,16 +11,12 @@ import (
 
 func TestTransferTx(t *testing.T) {
 	store := NewStore(testDB)
-	fmt.Println(store)
-	if store.db == nil {
-		t.Fatal("Database connection is nil")
-	}
 
-	fmt.Println(1)
+	// fmt.Println(1)
 
 	account1 := createRandomAccount(t)
 	account2 := createRandomAccount(t)
-	fmt.Println(2)
+	// fmt.Println(2)
 
 	//run n concurrent transfer transaction
 	n := 5
@@ -36,7 +32,7 @@ func TestTransferTx(t *testing.T) {
 
 	errs := make(chan error)
 	results := make(chan TransferTxResult)
-	fmt.Println(3)
+	// fmt.Println(3)
 
 	for i := 0; i < n; i++ {
 		go func() {
@@ -52,19 +48,19 @@ func TestTransferTx(t *testing.T) {
 
 		}()
 	}
-	fmt.Println(4)
+	// fmt.Println(4)
 	existed := make(map[int]bool)
 
 	for i := 0; i < n; i++ {
 		err := <-errs
 		require.NoError(t, err)
 
-		fmt.Println(5)
+		// fmt.Println(5)
 
 		result := <-results
 		require.NotNil(t, result)
 
-		fmt.Println(6)
+		// fmt.Println(6)
 
 		//check transfer
 		transfer := result.Transfer
@@ -75,7 +71,7 @@ func TestTransferTx(t *testing.T) {
 		require.NotZero(t, transfer.ID)
 		require.NotZero(t, transfer.CreatedAt)
 
-		fmt.Println(7)
+		// fmt.Println(7)
 		_, err = store.GetTransfer(context.Background(), transfer.ID)
 		require.NoError(t, err)
 
@@ -87,7 +83,7 @@ func TestTransferTx(t *testing.T) {
 		require.NotZero(t, fromEntry.ID)
 		require.NotZero(t, fromEntry.CreatedAt)
 
-		fmt.Println(8)
+		// fmt.Println(8)
 
 		_, err = store.GetEntry(context.Background(), fromEntry.ID)
 		require.NoError(t, err)
@@ -100,7 +96,7 @@ func TestTransferTx(t *testing.T) {
 		require.NotZero(t, toEntry.ID)
 		require.NotZero(t, toEntry.CreatedAt)
 
-		fmt.Println(9)
+		// fmt.Println(9)
 
 		_, err = store.GetEntry(context.Background(), toEntry.ID)
 		require.NoError(t, err)
