@@ -1,0 +1,30 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:12-alpine
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=moneystack
+    ports:
+      - "5300:5432"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - DBSOURCE=postgresql://root:root@postgres:5432/moneystack?sslmode=disable
+    depends_on:
+      - postgres
+    entrypoint: ["/app/wait-for.sh", "postgres:5432", "--", "/app/start.sh"]
+    command: ["/app/main"]
+
+
+
+
+
+
+

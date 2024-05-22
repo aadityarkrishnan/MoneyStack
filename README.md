@@ -282,3 +282,19 @@ docker run --name moneystack --network moneystack_nw -p 8080:8080 \
 To enter into the container
 
 docker exec -it e9a614a1def8 /bin/sh
+
+
+Once created the start.sh need to changes its permission to chmod +x start.sh
+
+Need to download
+https://github.com/eficode/wait-for/releases/tag/v2.2.4 (download the latest version frm this link)
+ mv ~/Downloads/wait-for ./wait-for.sh
+ chmod +x wait-for.sh
+
+
+
+ docker-compose up // to run 
+
+docker-compose up --build // to rebuild
+
+ docker-compose run --service-ports api /bin/sh // to manual run for testing
