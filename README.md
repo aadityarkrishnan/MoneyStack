@@ -297,4 +297,22 @@ https://github.com/eficode/wait-for/releases/tag/v2.2.4 (download the latest ver
 
 docker-compose up --build // to rebuild
 
- docker-compose run --service-ports api /bin/sh // to manual run for testing
+docker-compose run --service-ports api /bin/sh // to manual run for testing
+
+
+ Now we need to push the docker repo to ECR
+
+ For that Go AWS Console and create a private ECR repository
+
+ Then rename old github yaml to .test and change the name
+
+ Now create a deploy.yaml to add ecr push codes
+ 
+Now search for Github MarketPlace and look for AWS ECR and get its config code
+
+In order to get access to ECR, need to create a new user in IAM and need to create a Permission Group with this policy AmazonEC2ContainerRegistryFullAccess
+
+Then generate the access key and secret key and keep them on Github Secret
+
+
+
