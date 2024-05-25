@@ -24,7 +24,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
-    
+
     steps:
     - uses: actions/checkout@v3
 
@@ -33,7 +33,7 @@ jobs:
       with:
         go-version: '1.22'
       id: go
-    
+
     - name: Install Go Lang Migration
       run: |
         curl -L https://github.com/golang-migrate/migrate/releases/download/v4.16.2/migrate.linux-386.tar.gz | tar xvz
@@ -50,6 +50,10 @@ jobs:
 
     - name: Run Migrations
       run: make migrateup
+      env:
+        DB_SOURCE: postgresql://root:root@localhost:5432/moneystack?sslmode=disable
 
     - name: Run Tests
       run: make test
+      env:
+        DB_SOURCE: postgresql://root:root@localhost:5432/moneystack?sslmode=disable
