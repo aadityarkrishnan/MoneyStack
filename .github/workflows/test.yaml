@@ -1,4 +1,7 @@
-name: Run unit tests
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: ci-test
 
 on:
   push:
@@ -7,8 +10,9 @@ on:
     branches: [ "main" ]
 
 jobs:
+
   test:
-    name: Test
+    name : Test
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -18,12 +22,13 @@ jobs:
           POSTGRES_PASSWORD: root
           POSTGRES_DB: moneystack
         ports:
-          - 5432:5432
+          - 5300:5432
         options: >-
-          --health-cmd "pg_isready -U root"
+          --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 10
+          --health-retries 5
+        
 
     steps:
     - uses: actions/checkout@v3
@@ -33,27 +38,15 @@ jobs:
       with:
         go-version: '1.22'
       id: go
-
+    
     - name: Install Go Lang Migration
       run: |
         curl -L https://github.com/golang-migrate/migrate/releases/download/v4.16.2/migrate.linux-386.tar.gz | tar xvz
         sudo mv migrate /usr/bin/
         which migrate
-
-    - name: Wait for Postgres
-      run: |
-        until pg_isready -h localhost -p 5432 -U root; do
-          echo "Waiting for postgres service to be ready..."
-          sleep 5
-        done
-        echo "Postgres is ready!"
-
+    
     - name: Run Migrations
       run: make migrateup
-      env:
-        DB_SOURCE: postgresql://root:root@localhost:5432/moneystack?sslmode=disable
 
-    - name: Run Tests
+    - name: Test
       run: make test
-      env:
-        DB_SOURCE: postgresql://root:root@localhost:5432/moneystack?sslmode=disable
