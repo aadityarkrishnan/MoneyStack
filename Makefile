@@ -6,10 +6,10 @@ dropdb:
 	docker exec -it postgres12 dropdb moneystack
 
 migrateup:
-	migrate -path db/migration -database "postgresql://root:root@localhost:5200/moneystack?sslmode=disable" -verbose up
+	migrate -path db/migration -database "postgresql://root:root@localhost:5300/moneystack?sslmode=disable" -verbose up
 
 migratedown:
-	migrate -path db/migration -database "postgresql://root:root@localhost:5200/moneystack?sslmode=disable" -verbose down
+	migrate -path db/migration -database "postgresql://root:root@localhost:5300/moneystack?sslmode=disable" -verbose down
 
 sqlc:
 	sqlc generate
